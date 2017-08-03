@@ -92,13 +92,15 @@ void KalmanFilter::init(int DP, int MP, int CP, int type)
     temp5.create(MP, 1, type); //don't know what this is, this is the one to be changes for EKF
 }
 
-const Mat& KalmanFilter::predict(const Mat& control)
+const Mat& KalmanFilter::predict(const Mat& control)//it takes the control, so my input will be nothing.
 {
     CV_INSTRUMENT_REGION()
 
     // update the state: x'(k) = A*x(k)
-    statePre = transitionMatrix*statePost;
+    statePre = transitionMatrix*statePost;//statePost will be the one from the previous step, state pre is the current state.
 
+    //this condition will happen if the control.empty=0 means if there is input.
+    //so, in my case it will not go into this.
     if( !control.empty() )
         // x'(k) = x'(k) + B*u(k)
         statePre += controlMatrix*control;
