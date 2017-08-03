@@ -52,31 +52,44 @@ KalmanFilter::KalmanFilter(int dynamParams, int measureParams, int controlParams
 void KalmanFilter::init(int DP, int MP, int CP, int type)
 {
     CV_Assert( DP > 0 && MP > 0 );
+    //To make sure DP, and MP > 0 other wise produce error.
     CV_Assert( type == CV_32F || type == CV_64F );
+    //make sure of the type
     CP = std::max(CP, 0);
-
+    //make sure CP is not -ve
+    
+    //for pre and post estimation
     statePre = Mat::zeros(DP, 1, type);
     statePost = Mat::zeros(DP, 1, type);
+    
+    //initialize the transition matrix, it an nDPxnDP eye matrix 
     transitionMatrix = Mat::eye(DP, DP, type);
-
+    //The following means everything's noise is a function of this thing. logical!
     processNoiseCov = Mat::eye(DP, DP, type);
+    //The measurements are ones of the states, so, OK.
     measurementMatrix = Mat::zeros(MP, DP, type);
+    //The noise covariance is a renage of every state noise, so, OK.
     measurementNoiseCov = Mat::eye(MP, MP, type);
-
+    //
     errorCovPre = Mat::zeros(DP, DP, type);
     errorCovPost = Mat::zeros(DP, DP, type);
+    
     gain = Mat::zeros(DP, MP, type);
 
     if( CP > 0 )
         controlMatrix = Mat::zeros(DP, CP, type);
     else
+        //release the control matrix
+        //in this else, we are sure CP = 0
         controlMatrix.release();
-
-    temp1.create(DP, DP, type);
-    temp2.create(MP, DP, type);
-    temp3.create(MP, MP, type);
-    temp4.create(MP, DP, type);
-    temp5.create(MP, 1, type);
+    
+    // note, this is set if the control input zero, see how they change further
+    // those Mat objects existed from before, but here the create method is changing their size to fit the new things.
+    temp1.create(DP, DP, type); //same size of transition matrix, and processNoiseCov matrix but not eye.
+    temp2.create(MP, DP, type); //same size of measurementMatrix but not eye.
+    temp3.create(MP, MP, type); //same size of measurementNoiseCov matrix  but not eye.
+    temp4.create(MP, DP, type); //same size of measurementMatrix but not eye. like temp2's size
+    temp5.create(MP, 1, type); //don't know what this is, this is the one to be changes for EKF
 }
 
 const Mat& KalmanFilter::predict(const Mat& control)
